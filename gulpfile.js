@@ -1,7 +1,8 @@
+/* eslint-disable no-undef */
 
 const gulp = require("gulp");
 const wp = require("webpack-stream");
-const nd = require("gulp-nodemon");
+// const nd = require("gulp-nodemon");
 
 function clientBuild() {
     return gulp.src(["src/*.js"])
