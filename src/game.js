@@ -1,5 +1,5 @@
 import { loadText, getResource, loadTexture } from "./resource";
-import { mat4, vec3, vec2, quat } from "./gl-matrix/gl-matrix.js";
+import { mat4, vec3, quat } from "./gl-matrix/gl-matrix.js";
 import { drawEntity, Renderable, Entity, bindEntityProgram } from "./entity";
 
 function createShader(gl, type, src) {
@@ -35,24 +35,6 @@ function createShaderProgram(gl, vert, frag) {
 const projMatrix = mat4.create();
 mat4.perspective(projMatrix, 1.2, 4/3, 0.1, 1000);
 
-// const tri = [
-//     0,0,
-//     0,0,
-//     0,0.5,
-//     0,1,
-//     0.5,0,
-//     1,0,
-
-//     // V4
-//     0, 0.5,
-//     0, 1,
-//     0.5, 0.5,
-//     1, 1,
-//     // V5
-//     0.5, 0,
-//     1, 0,
-// ];
-
 const cubeVerts = new Float32Array([
     -0.7, -0.7,  0.7, -1.0, -1.0,
     0.7, -0.7,  0.7, 1.0, -1.0,
@@ -74,9 +56,7 @@ const cameraTgt = vec3.create();
 const cameraAngles = [0,0];
 const cameraRotQuat = quat.create();
 
-const V3_X = vec3.fromValues(1,0,0);
 const V3_Y = vec3.fromValues(0,1,0);
-
 
 const cameraFwd = vec3.create();
 const cameraOrtho = vec3.create();
@@ -111,8 +91,6 @@ function clampf(x, min, max) {
     }
 }
 
-const DPI = 2* Math.PI;
-
 // Entrypoint
 (async function(){
     const canvas = document.getElementById("c");
@@ -126,7 +104,7 @@ const DPI = 2* Math.PI;
     window.addEventListener("keyup", setInput(0));
     document.addEventListener("pointerlockchange", pointerLockChangeHandler, false);
 
-    function pointerLockChangeHandler(e) {
+    function pointerLockChangeHandler() {
         document.addEventListener("mousemove", mouseMoveHandler, false);
     }
 

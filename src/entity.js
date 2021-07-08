@@ -29,6 +29,7 @@ export class Entity {
         this.rotate = vec3.fromValues(0.0, 0.0, 0.0);
         this.qr = quat.create();
     }
+    // eslint-disable-next-line no-unused-vars
     update(dt) {}
 }
 
@@ -65,8 +66,6 @@ export function drawEntity(gl, e, camera, proj) {
 
 export class Renderable {
     constructor(gl, vb, eb, tex, type) {
-        // this.vertexBuffer = vb;
-        // this.elementBuffer = eb;
         this.texture = tex;
         this.vertexDataType = type;
         this.col = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
