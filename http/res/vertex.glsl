@@ -11,6 +11,7 @@ void main() {
     
     // gl_Position is a special variable a vertex shader
     // is responsible for setting
-    gl_Position = u_projMat * u_viewMat * u_modelMat * a_position;
+    vec4 posn = u_projMat * u_viewMat * u_modelMat * a_position;
+    gl_Position = posn;
     f_uv = a_uv;
 }

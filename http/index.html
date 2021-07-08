@@ -1,5 +1,11 @@
 
 <body>
     <canvas id="c" width="640" height="480"></canvas>
+    <button onclick="lock()">Lock Cursor</button>
     <script src="js/main.js"></script>
+    <script>
+        function lock() {
+            document.getElementById("c").requestPointerLock();
+        }
+    </script>
 </body>
