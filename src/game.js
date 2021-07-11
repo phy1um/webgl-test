@@ -1,6 +1,6 @@
 import { loadText, getResource, loadTexture } from "./resource";
 import { mat4, vec3, quat } from "./gl-matrix/gl-matrix.js";
-import { drawEntity, Renderable, Entity, bindEntityProgram } from "./entity";
+import { drawEntity, Renderable, Entity, Program, bindEntityProgram } from "./entity";
 
 function createShader(gl, type, src) {
     console.log("Loading shader: " +src);
@@ -118,14 +118,26 @@ function clampf(x, min, max) {
     }
 
     const t1 = loadTexture(gl, "/res/tile.png");
-    await loadText("/res/fragment.glsl");
-    const fs = createShader(gl, gl.FRAGMENT_SHADER, getResource("/res/fragment.glsl"));
-    await loadText("/res/vertex.glsl");
-    const vs = createShader(gl, gl.VERTEX_SHADER, getResource("/res/vertex.glsl"));
-    const program = createShaderProgram(gl, vs, fs);
-    bindEntityProgram(gl, program);
+    await loadText("/res/textured_fragment.glsl");
+    const fs = createShader(gl, gl.FRAGMENT_SHADER, getResource("/res/textured_fragment.glsl"));
+    await loadText("/res/textured_vertex.glsl");
+    const vs = createShader(gl, gl.VERTEX_SHADER, getResource("/res/textured_vertex.glsl"));
+    const p = new Program(gl, vs, fs, function(gl, args) {
+        gl.enableVertexAttribArray(this.attribs.pos);
+        gl.enableVertexAttribArray(this.attribs.uv);
+        gl.activeTexture(gl.TEXTURE0 + 0);
+        gl.bindTexture(gl.TEXTURE_2D, args.texture);
+        gl.uniform1i(this.uniforms.sampler, 0);
 
-    const r = new Renderable(gl, cubeVerts, cubeIndices, t1, gl.TRIANGLE_STRIP);
+        gl.vertexAttribPointer(this.attribs.pos , 3, gl.FLOAT, false, 5*4, 0);
+        gl.vertexAttribPointer(this.attribs.uv, 2, gl.FLOAT, false, 5*4, 3*4);
+    });
+    p.bindAttribute("a_position", "pos");
+    p.bindAttribute("a_uv", "uv");
+    p.bindUniform("u_sampler", "sampler");
+
+    const r = new Renderable(gl, cubeVerts, cubeIndices, p, gl.TRIANGLE_STRIP);
+    r.setArg("texture", t1);
 
     const viewMatrix = mat4.create();
     const up = vec3.fromValues(0, 1, 0);
@@ -164,7 +176,8 @@ function clampf(x, min, max) {
         gl.clear(gl.COLOR_BUFFER_BIT);
         for (let e of entities) {
             e.update(dt);
-            drawEntity(gl, e, viewMatrix, projMatrix);
+            // drawEntity(gl, e, viewMatrix, projMatrix);
+            e.draw(gl, viewMatrix, projMatrix);
         }
 
         quat.fromEuler(cameraRotQuat, 0, cameraAngles[1], 0);
