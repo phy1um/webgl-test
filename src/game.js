@@ -1,6 +1,7 @@
 import { loadText, getResource, loadTexture } from "./resource";
 import { mat4, vec3, quat } from "./gl-matrix/gl-matrix.js";
-import { drawEntity, Renderable, Entity, Program, bindEntityProgram } from "./entity";
+import { Entity } from "./entity";
+import { Renderable, Program } from "./draw.js";
 
 function createShader(gl, type, src) {
     console.log("Loading shader: " +src);
@@ -17,20 +18,6 @@ function createShader(gl, type, src) {
     return shader;
 }
 
-function createShaderProgram(gl, vert, frag) {
-    const prog = gl.createProgram();
-    gl.attachShader(prog, vert);
-    gl.attachShader(prog, frag);
-    gl.linkProgram(prog);
-    const res = gl.getProgramParameter(prog, gl.LINK_STATUS);
-    if (!res) {
-        console.error("Failed to create shader program!");
-        console.error(gl.getProgramInfoLog(prog));
-        gl.deleteProgram(prog);
-        return null;
-    }
-    return prog;
-}
 
 const projMatrix = mat4.create();
 mat4.perspective(projMatrix, 1.2, 4/3, 0.1, 1000);
@@ -122,7 +109,7 @@ function clampf(x, min, max) {
     const fs = createShader(gl, gl.FRAGMENT_SHADER, getResource("/res/textured_fragment.glsl"));
     await loadText("/res/textured_vertex.glsl");
     const vs = createShader(gl, gl.VERTEX_SHADER, getResource("/res/textured_vertex.glsl"));
-    const p = new Program(gl, vs, fs, function(gl, args) {
+    const texturedEntityProgram = new Program(gl, vs, fs, function(gl, args) {
         gl.enableVertexAttribArray(this.attribs.pos);
         gl.enableVertexAttribArray(this.attribs.uv);
         gl.activeTexture(gl.TEXTURE0 + 0);
@@ -132,11 +119,11 @@ function clampf(x, min, max) {
         gl.vertexAttribPointer(this.attribs.pos , 3, gl.FLOAT, false, 5*4, 0);
         gl.vertexAttribPointer(this.attribs.uv, 2, gl.FLOAT, false, 5*4, 3*4);
     });
-    p.bindAttribute("a_position", "pos");
-    p.bindAttribute("a_uv", "uv");
-    p.bindUniform("u_sampler", "sampler");
+    texturedEntityProgram.bindAttribute("a_position", "pos");
+    texturedEntityProgram.bindAttribute("a_uv", "uv");
+    texturedEntityProgram.bindUniform("u_sampler", "sampler");
 
-    const r = new Renderable(gl, cubeVerts, cubeIndices, p, gl.TRIANGLE_STRIP);
+    const r = new Renderable(gl, cubeVerts, cubeIndices, texturedEntityProgram, gl.TRIANGLE_STRIP);
     r.setArg("texture", t1);
 
     const viewMatrix = mat4.create();
@@ -176,7 +163,6 @@ function clampf(x, min, max) {
         gl.clear(gl.COLOR_BUFFER_BIT);
         for (let e of entities) {
             e.update(dt);
-            // drawEntity(gl, e, viewMatrix, projMatrix);
             e.draw(gl, viewMatrix, projMatrix);
         }
 
