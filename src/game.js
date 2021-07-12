@@ -2,7 +2,7 @@ import { loadText, getResource, loadTexture } from "./resource";
 import { mat4, vec4, vec3, quat } from "./gl-matrix/gl-matrix.js";
 import { Entity } from "./entity";
 import { Renderable, Program } from "./draw.js";
-import { readObjParts } from "./obj.js"
+import { readObjParts } from "./obj.js";
 
 function createShader(gl, type, src) {
     console.log("Loading shader: " +src);
@@ -131,6 +131,7 @@ function clampf(x, min, max) {
     texturedEntityProgram.bindAttribute("a_uv", "uv");
     texturedEntityProgram.bindUniform("u_sampler", "sampler");
 
+    // eslint-disable-next-line no-unused-vars
     const nudeEntityProgram = new Program(gl, nvs, nfs, function(gl, args) {
         gl.enableVertexAttribArray(this.attribs.pos);
         gl.vertexAttribPointer(this.attribs.pos , 3, gl.FLOAT, false, 5*4, 0);
