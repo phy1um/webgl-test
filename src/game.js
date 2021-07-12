@@ -93,7 +93,13 @@ function clampf(x, min, max) {
     document.addEventListener("pointerlockchange", pointerLockChangeHandler, false);
 
     function pointerLockChangeHandler() {
-        document.addEventListener("mousemove", mouseMoveHandler, false);
+        if (document.pointerLockElement == canvas) {
+            console.log("Input: Mouse cursor is locked to canvas");
+            document.addEventListener("mousemove", mouseMoveHandler, false);
+        } else {
+            console.log("Input: Mouse cursor is unlocked from canvas");
+            document.removeEventListener("mousemove", mouseMoveHandler, false);
+        }
     }
 
     function mouseMoveHandler(e) {
@@ -231,10 +237,8 @@ function clampf(x, min, max) {
         then = now;
         renderGlScene(gl, viewMatrix, dt);
         avgCounter += 1;
-        if (avgSum > 1) {
+        if (avgSum > 5) {
             console.log(1/ (avgSum / avgCounter));
-            console.log(cameraFwd);
-            console.log(cameraOrtho);
             avgSum = 0;
             avgCounter = 0;
         }
