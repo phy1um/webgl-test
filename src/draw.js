@@ -1,9 +1,6 @@
-import {vec4} from "./gl-matrix/gl-matrix.js";
-
 export class Renderable {
     constructor(gl, vb, eb, prog, type) {
         this.vertexDataType = type;
-        this.col = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
         this.vertexBuffer = gl.createBuffer();
         this.elementBuffer = gl.createBuffer();
         this.elementBufferLength = eb.length;
@@ -16,12 +13,14 @@ export class Renderable {
     }
 
     draw(gl, m, v, p) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.elementBuffer);
         this.program.bind(this.args);
-        gl.uniform4fv(this.program.uniform_colour, this.col);
+        gl.uniform4fv(this.program.uniform_colour, this.args.col);
         gl.uniformMatrix4fv(this.program.uniform_model, false, m);
         gl.uniformMatrix4fv(this.program.uniform_proj, false, p);
         gl.uniformMatrix4fv(this.program.uniform_view, false, v);
-        gl.drawElements(this.vertexDataType, this.elementBufferLength, gl.UNSIGNED_BYTE, 0); 
+        gl.drawElements(this.vertexDataType, this.elementBufferLength, gl.UNSIGNED_SHORT, 0); 
     }
 
     delete(gl) {

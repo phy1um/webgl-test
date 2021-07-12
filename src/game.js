@@ -1,7 +1,8 @@
 import { loadText, getResource, loadTexture } from "./resource";
-import { mat4, vec3, quat } from "./gl-matrix/gl-matrix.js";
+import { mat4, vec4, vec3, quat } from "./gl-matrix/gl-matrix.js";
 import { Entity } from "./entity";
 import { Renderable, Program } from "./draw.js";
+import { readObjParts } from "./obj.js"
 
 function createShader(gl, type, src) {
     console.log("Loading shader: " +src);
@@ -33,7 +34,7 @@ const cubeVerts = new Float32Array([
     0.7,  0.7, -0.7, 1.0, 1.0,
 ]);
 
-const cubeIndices = new Uint8Array([
+const cubeIndices = new Uint16Array([
     0, 1, 2, 3, 7, 1, 5, 4, 7, 6, 2, 4, 0, 1
 ]);
 
@@ -104,11 +105,18 @@ function clampf(x, min, max) {
         cameraAngles[1] %= 360;
     }
 
+    await loadText("/res/teapot.obj");
+    const [tpVerts, tpInds] = readObjParts(getResource("/res/teapot.obj"));
+
     const t1 = loadTexture(gl, "/res/tile.png");
     await loadText("/res/textured_fragment.glsl");
     const fs = createShader(gl, gl.FRAGMENT_SHADER, getResource("/res/textured_fragment.glsl"));
     await loadText("/res/textured_vertex.glsl");
     const vs = createShader(gl, gl.VERTEX_SHADER, getResource("/res/textured_vertex.glsl"));
+    await loadText("/res/untex_fragment.glsl");
+    const nfs = createShader(gl, gl.FRAGMENT_SHADER, getResource("/res/untex_fragment.glsl"));
+    await loadText("/res/untex_vertex.glsl");
+    const nvs = createShader(gl, gl.VERTEX_SHADER, getResource("/res/untex_vertex.glsl"));
     const texturedEntityProgram = new Program(gl, vs, fs, function(gl, args) {
         gl.enableVertexAttribArray(this.attribs.pos);
         gl.enableVertexAttribArray(this.attribs.uv);
@@ -123,8 +131,18 @@ function clampf(x, min, max) {
     texturedEntityProgram.bindAttribute("a_uv", "uv");
     texturedEntityProgram.bindUniform("u_sampler", "sampler");
 
-    const r = new Renderable(gl, cubeVerts, cubeIndices, texturedEntityProgram, gl.TRIANGLE_STRIP);
-    r.setArg("texture", t1);
+    const nudeEntityProgram = new Program(gl, nvs, nfs, function(gl, args) {
+        gl.enableVertexAttribArray(this.attribs.pos);
+        gl.vertexAttribPointer(this.attribs.pos , 3, gl.FLOAT, false, 5*4, 0);
+    });
+    texturedEntityProgram.bindAttribute("a_position", "pos");
+
+    const cubeDraw = new Renderable(gl, cubeVerts, cubeIndices, texturedEntityProgram, gl.TRIANGLE_STRIP);
+    cubeDraw.setArg("texture", t1);
+    cubeDraw.setArg("col", vec4.fromValues(1.0, 0.8, 0.6, 1.0));
+
+    const tpDraw = new Renderable(gl, tpVerts, tpInds, nudeEntityProgram, gl.TRIANGLES);
+    tpDraw.setArg("col", vec4.fromValues(1.0, 0.8, 0.6, 1.0));
 
     const viewMatrix = mat4.create();
     const up = vec3.fromValues(0, 1, 0);
@@ -145,7 +163,12 @@ function clampf(x, min, max) {
         const rotx = Math.random() * 160 - 80;
         const roty = Math.random() * 160 - 80;
         const rotz = Math.random() * 160 - 80;
-        makeEntity(r, rx, ry, rz, function(dt) {
+        let rr = cubeDraw;
+        const rnd = Math.random();
+        if ( rnd < 0.5 ) {
+            rr = tpDraw;
+        } 
+        makeEntity(rr, rx, ry, rz, function(dt) {
             this.rotate[0] += rotx*dt;
             this.rotate[1] += roty*dt;
             this.rotate[2] += rotz*dt;
